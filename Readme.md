@@ -24,8 +24,8 @@ An intelligent system that analyzes satellite imagery of rooftops to estimate us
 
 ### 1. **Clone the Repository**
 ```bash
-git clone https://github.com/yourusername/solar-rooftop-ai.git
-cd solar-rooftop-ai
+git clone https://github.com/yourusername/solar-rooftop-analyzer.git
+cd solar-rooftop-analyzer
 ```
 
 ### 2. **Create and Activate a Virtual Environment**
@@ -44,7 +44,9 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 4. **🚀 Run the Streamlit App**
+### 4. **Download Model from [HERE](https://github.com/yogesh-pro/solar-rooftop-analyzer/releases/tag/Model)
+
+### 5. **🚀 Run the Streamlit App**
 ```bash
 streamlit run app.py
 ```
