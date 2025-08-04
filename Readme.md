@@ -2,14 +2,14 @@
 
 An intelligent system that analyzes rooftop images to estimate usable solar panel area and uses AI (via OpenRouter) to calculate installation metrics, energy production, and ROI estimates for homeowners and solar professionals.
 
-🚀 **Live Demo**: [Deploy on Streamlit Cloud](https://share.streamlit.io) *(Link will be updated after deployment)*
+🚀 **Live Demo**: [Click Me!](https://share.streamlit.io](https://solar-rooftop-analyzer-vphpoef7w8xi6dx27jqq3z.streamlit.app/)
 
 ---
 
 ## 📌 Features
 
 - 🔼 Upload a rooftop image via the web interface
-- 🧠 ML-based rooftop segmentation using deep learning model
+- 🧠 ML-based rooftop segmentation using a deep learning model
 - 📏 Automated rooftop area estimation in square meters
 - 🧮 AI-powered solar metric generation:
   - 📦 Recommended number of solar panels
