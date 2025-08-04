@@ -23,18 +23,51 @@ transform = T.Compose([
     T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
+# Get API key from environment/secrets
+api_key = os.getenv("OPENROUTER_API_KEY")
+if not api_key:
+    st.error("🔑 **OpenRouter API Key Missing!** Please configure OPENROUTER_API_KEY in Streamlit Cloud secrets.")
+    st.stop()
+
 client = OpenAI(
   base_url="https://openrouter.ai/api/v1",
-  api_key=os.getenv("OPENROUTER_API_KEY", "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"),
+  api_key=api_key,
 )
 
 def ask_openrouter(prompt, model="google/gemma-3-12b-it:free"):
-    response = client.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.7
-    )
-    return response.choices[0].message.content.strip()
+    try:
+        # Debug: Show API key status (first 10 chars only for security)
+        api_key_preview = api_key[:10] + "..." if api_key and len(api_key) > 10 else "None"
+        st.info(f"🔍 **Debug Info**: API key starts with: {api_key_preview}")
+        
+        response = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        error_msg = str(e)
+        st.error(f"🚨 **API Call Failed**: {error_msg}")
+        
+        if "authentication" in error_msg.lower() or "unauthorized" in error_msg.lower():
+            st.error("""
+            🔑 **API Authentication Failed**
+            
+            **Possible causes**:
+            1. Invalid or expired API key
+            2. API key not properly set in Streamlit secrets
+            3. OpenRouter service issue
+            
+            **To fix**:
+            1. Get a valid API key from https://openrouter.ai/
+            2. In Streamlit Cloud: Settings → Secrets → Add:
+               ```
+               OPENROUTER_API_KEY = "your_actual_key_here"
+               ```
+            3. Save and restart the app
+            """)
+        return None
 
 
 def get_prompt(area_m2):
@@ -110,6 +143,10 @@ if uploaded_file:
     with st.spinner("Contacting AI model..."):
         prompt = get_prompt(estimated_area)
         ai_response = ask_openrouter(prompt)
+        
+        if ai_response is None:
+            st.stop()  # Stop execution if API call failed
+            
         st.markdown("**Raw AI response:**")
         st.code(ai_response)
 
@@ -117,6 +154,7 @@ if uploaded_file:
             metrics = parse_json_from_text(ai_response)
             if not metrics:
                 st.error("PLEASE RETRY : No valid JSON response received from AI.")
+                st.stop()
         except json.JSONDecodeError as e:
             st.error(f"PLEASE RETRY : Failed to decode JSON from AI response: {e}")
             metrics = None
