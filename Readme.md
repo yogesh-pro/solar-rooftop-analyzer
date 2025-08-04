@@ -1,13 +1,15 @@
 # ☀️ Solar Rooftop Analysis App
 
-An intelligent system that analyzes satellite imagery of rooftops to estimate usable solar panel area and uses AI (via OpenRouter and Phi-4) to calculate installation metrics, energy production, and ROI estimates for homeowners and solar professionals.
+An intelligent system that analyzes rooftop images to estimate usable solar panel area and uses AI (via OpenRouter) to calculate installation metrics, energy production, and ROI estimates for homeowners and solar professionals.
+
+🚀 **Live Demo**: [Deploy on Streamlit Cloud](https://share.streamlit.io) *(Link will be updated after deployment)*
 
 ---
 
 ## 📌 Features
 
-- 🔼 Upload a satellite rooftop image via the web interface
-- 🧠 ML-based rooftop segmentation using DeepLabV3+ (or your custom model)
+- 🔼 Upload a rooftop image via the web interface
+- 🧠 ML-based rooftop segmentation using deep learning model
 - 📏 Automated rooftop area estimation in square meters
 - 🧮 AI-powered solar metric generation:
   - 📦 Recommended number of solar panels
