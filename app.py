@@ -26,6 +26,13 @@ transform = T.Compose([
 # Get API key from Streamlit secrets (works both locally and on Streamlit Cloud)
 try:
     api_key = st.secrets["OPENROUTER_API_KEY"]
+    
+    # Initialize OpenAI client with the API key
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=api_key,
+    )
+    
 except KeyError:
     st.error("""
     🔑 **OpenRouter API Key Missing!** 
@@ -41,45 +48,52 @@ except KeyError:
     ```
     """)
     st.stop()
-
-client = OpenAI(
-  base_url="https://openrouter.ai/api/v1",
-  api_key=api_key,
-)
+    client = None  # This won't be reached, but helps with type checking
 
 def ask_openrouter(prompt, model="google/gemma-3-12b-it:free"):
     try:
-        # Debug: Show API key status (first 10 chars only for security)
-        api_key_preview = api_key[:10] + "..." if api_key and len(api_key) > 10 else "None"
+        # Debug: Show API key status (first 15 chars for better debugging)
+        api_key_preview = api_key[:15] + "..." if api_key and len(api_key) > 15 else "None"
         st.info(f"🔍 **Debug Info**: API key starts with: {api_key_preview}")
         
+        # Validate API key format
+        if not api_key or not api_key.startswith("sk-or-v1-"):
+            st.error("❌ **Invalid API Key Format**: OpenRouter API keys should start with 'sk-or-v1-'")
+            return None
+        
+        # Test with a simple request first
         response = client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.7
+            temperature=0.7,
+            max_tokens=1000  # Add token limit for better control
         )
         return response.choices[0].message.content.strip()
+        
     except Exception as e:
         error_msg = str(e)
         st.error(f"🚨 **API Call Failed**: {error_msg}")
         
-        if "authentication" in error_msg.lower() or "unauthorized" in error_msg.lower():
+        if "401" in error_msg or "authentication" in error_msg.lower() or "unauthorized" in error_msg.lower():
             st.error("""
             🔑 **API Authentication Failed**
             
             **Possible causes**:
             1. Invalid or expired API key
-            2. API key not properly set in Streamlit secrets
-            3. OpenRouter service issue
+            2. API key format is incorrect (should start with 'sk-or-v1-')
+            3. OpenRouter account has no credits
             
             **To fix**:
-            1. Get a valid API key from https://openrouter.ai/
-            2. In Streamlit Cloud: Settings → Secrets → Add:
-               ```
-               OPENROUTER_API_KEY = "your_actual_key_here"
-               ```
-            3. Save and restart the app
+            1. Get a valid API key from https://openrouter.ai/keys
+            2. Ensure you have credits in your OpenRouter account
+            3. Update your secrets with the correct key format
             """)
+        elif "429" in error_msg:
+            st.error("⏰ **Rate Limited**: Too many requests. Please wait a moment and try again.")
+        elif "quota" in error_msg.lower():
+            st.error("💰 **Quota Exceeded**: Your OpenRouter account is out of credits.")
+        else:
+            st.error(f"🔧 **Technical Error**: {error_msg}")
         return None
 
 
