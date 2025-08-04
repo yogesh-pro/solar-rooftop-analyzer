@@ -2,7 +2,7 @@
 
 An intelligent system that analyzes rooftop images to estimate usable solar panel area and uses AI (via OpenRouter) to calculate installation metrics, energy production, and ROI estimates for homeowners and solar professionals.
 
-🚀 **Live Demo**: [Click Me!](https://share.streamlit.io](https://solar-rooftop-analyzer-vphpoef7w8xi6dx27jqq3z.streamlit.app/)
+🚀 **Live Demo**: [Click Me!](https://solar-rooftop-analyzer-vphpoef7w8xi6dx27jqq3z.streamlit.app/)
 
 ---
 
