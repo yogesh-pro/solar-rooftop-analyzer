@@ -23,10 +23,23 @@ transform = T.Compose([
     T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
-# Get API key from environment/secrets
-api_key = os.getenv("OPENROUTER_API_KEY")
-if not api_key:
-    st.error("🔑 **OpenRouter API Key Missing!** Please configure OPENROUTER_API_KEY in Streamlit Cloud secrets.")
+# Get API key from Streamlit secrets (works both locally and on Streamlit Cloud)
+try:
+    api_key = st.secrets["OPENROUTER_API_KEY"]
+except KeyError:
+    st.error("""
+    🔑 **OpenRouter API Key Missing!** 
+    
+    **For local development**: Add your API key to `.streamlit/secrets.toml`:
+    ```
+    OPENROUTER_API_KEY = "your_api_key_here"
+    ```
+    
+    **For Streamlit Cloud**: Add your API key in Settings → Secrets:
+    ```
+    OPENROUTER_API_KEY = "your_api_key_here"
+    ```
+    """)
     st.stop()
 
 client = OpenAI(
