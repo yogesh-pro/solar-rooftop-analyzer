@@ -8,15 +8,12 @@ from openai import OpenAI
 import os
 import re
 import json
+from model_loader import load_model_with_fallback
 
 # Load model (same as before)
 @st.cache_resource
 def load_model():
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = torch.load("rooftop_best_model.pt", map_location=device, weights_only=False)
-    model.eval()
-    model.to(device)
-    return model, device
+    return load_model_with_fallback()
 
 model, device = load_model()
 
@@ -28,7 +25,7 @@ transform = T.Compose([
 
 client = OpenAI(
   base_url="https://openrouter.ai/api/v1",
-  api_key="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" ,
+  api_key=os.getenv("OPENROUTER_API_KEY", "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"),
 )
 
 def ask_openrouter(prompt, model="google/gemma-3-12b-it:free"):
