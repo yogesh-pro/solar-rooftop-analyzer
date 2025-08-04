@@ -1,3 +1,19 @@
-.DS_Store
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
 venv/
+env/
+
+# macOS
+.DS_Store
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Model files (will be downloaded from GitHub releases)
+*.pt
+*.pth
 
