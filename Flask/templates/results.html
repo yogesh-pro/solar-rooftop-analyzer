@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="main-container">
+    <div class="row">
+        <div class="col-12 text-center mb-4">
+            <i class="fas fa-check-circle text-success" style="font-size: 3rem;"></i>
+            <h1 class="display-5 fw-bold text-success mb-3">Analysis Complete!</h1>
+            <p class="lead text-muted">Your rooftop solar potential has been analyzed</p>
+        </div>
+    </div>
+    
+    <!-- Rooftop Area Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success alert-custom text-center">
+                <h4><i class="fas fa-home me-2"></i>
+                {% if method == 'manual' %}
+                    Rooftop Area: <strong>{{ area|round(2) }} m²</strong>
+                {% else %}
+                    Estimated Rooftop Area: <strong>{{ area|round(2) }} m²</strong>
+                {% endif %}
+                </h4>
+                {% if method == 'manual' %}
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Analysis based on manually entered area
+                    </small>
+                {% else %}
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Area detected using AI image analysis
+                    </small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Image Analysis Results (only show if we have image data) -->
+    {% if plot_data %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-image me-2"></i>Visual Analysis</h5>
+                </div>
+                <div class="card-body text-center">
+                    <img src="data:image/png;base64,{{ plot_data }}" class="img-fluid rounded" alt="Rooftop Analysis" style="max-height: 400px;">
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-calculator me-2"></i>Manual Area Analysis</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="manual-area-display">
+                        <i class="fas fa-home text-info" style="font-size: 4rem; margin-bottom: 1rem;"></i>
+                        <h3 class="text-info">{{ area|round(2) }} m²</h3>
+                        <p class="text-muted">Solar analysis based on your specified rooftop area</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Bill Comparison Chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Monthly Electricity Bill Comparison</h5>
+                </div>
+                <div class="card-body text-center">
+                    <img src="data:image/png;base64,{{ bill_chart_data }}" class="img-fluid rounded" alt="Bill Comparison Chart" style="max-height: 450px;">
+                    <div class="mt-3">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="alert alert-danger">
+                                    <strong>Without Solar</strong><br>
+                                    Monthly: ₹{{ (1395 * 6.5)|round(0)|int }}<br>
+                                    Yearly: ₹{{ (1395 * 6.5 * 12)|round(0)|int }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="alert alert-success">
+                                    <strong>With Solar</strong><br>
+                                    Monthly: ₹{{ ((1395 - (metrics.yearly_production_kwh/12)) * 6.5)|round(0)|int if (1395 - (metrics.yearly_production_kwh/12)) > 0 else 0 }}<br>
+                                    Yearly: ₹{{ ((1395 - (metrics.yearly_production_kwh/12)) * 6.5 * 12)|round(0)|int if (1395 - (metrics.yearly_production_kwh/12)) > 0 else 0 }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="alert alert-warning">
+                                    <strong>Monthly Savings</strong><br>
+                                    ₹{{ (metrics.yearly_savings_inr / 12)|round(0)|int }}<br>
+                                    <small class="text-muted">{{ ((metrics.yearly_savings_inr / 12) / (1395 * 6.5) * 100)|round(1) }}% reduction</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI Generated Metrics -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-robot me-2"></i>Generated Solar Metrics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Recommended Panels -->
+                        <div class="col-md-6 mb-4">
+                            <div class="metric-card p-3 border rounded">
+                                <h5 class="text-primary"><i class="fas fa-solar-panel me-2"></i>Recommended Panels</h5>
+                                <h3 class="fw-bold">{{ metrics.recommended_panels }}</h3>
+                                <p class="text-muted small">{{ metrics.recommended_panels_explanation }}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Total Capacity -->
+                        <div class="col-md-6 mb-4">
+                            <div class="metric-card p-3 border rounded">
+                                <h5 class="text-success"><i class="fas fa-bolt me-2"></i>Total Capacity</h5>
+                                <h3 class="fw-bold">{{ metrics.total_capacity_kw }} kW</h3>
+                                <p class="text-muted small">{{ metrics.total_capacity_kw_explanation }}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Yearly Production -->
+                        <div class="col-md-6 mb-4">
+                            <div class="metric-card p-3 border rounded">
+                                <h5 class="text-info"><i class="fas fa-chart-line me-2"></i>Yearly Production</h5>
+                                <h3 class="fw-bold">{{ metrics.yearly_production_kwh|round(0)|int|string|replace('.0', '') }} kWh</h3>
+                                <p class="text-muted small">{{ metrics.yearly_production_explanation }}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Installation Cost -->
+                        <div class="col-md-6 mb-4">
+                            <div class="metric-card p-3 border rounded">
+                                <h5 class="text-danger"><i class="fas fa-rupee-sign me-2"></i>Installation Cost</h5>
+                                <h3 class="fw-bold">₹{{ metrics.installation_cost_inr|round(0)|int }}</h3>
+                                <p class="text-muted small">{{ metrics.installation_cost_explanation }}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Yearly Savings -->
+                        <div class="col-md-6 mb-4">
+                            <div class="metric-card p-3 border rounded">
+                                <h5 class="text-success"><i class="fas fa-piggy-bank me-2"></i>Yearly Savings</h5>
+                                <h3 class="fw-bold">₹{{ metrics.yearly_savings_inr|round(0)|int }}</h3>
+                                <p class="text-muted small">{{ metrics.yearly_savings_explanation }}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Payback Period -->
+                        <div class="col-md-6 mb-4">
+                            <div class="metric-card p-3 border rounded">
+                                <h5 class="text-warning"><i class="fas fa-calendar-alt me-2"></i>Payback Period</h5>
+                                <h3 class="fw-bold">{{ metrics.payback_period_years|round(1) }} years</h3>
+                                <p class="text-muted small">{{ metrics.payback_period_explanation }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Key Insights -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Key Insights</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <div class="insight-box p-3">
+                                <i class="fas fa-leaf text-success" style="font-size: 2rem;"></i>
+                                <h6 class="mt-2">Environmental Impact</h6>
+                                <p class="small text-muted">Reduce CO₂ emissions by approximately {{ ((metrics.yearly_production_kwh * 0.82) / 1000)|round(1) }} tons annually</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="insight-box p-3">
+                                <i class="fas fa-coins text-warning" style="font-size: 2rem;"></i>
+                                <h6 class="mt-2">ROI Analysis</h6>
+                                <p class="small text-muted">{{ (100/metrics.payback_period_years)|round(1) }}% annual return on investment</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="insight-box p-3">
+                                <i class="fas fa-home text-primary" style="font-size: 2rem;"></i>
+                                <h6 class="mt-2">Energy Independence</h6>
+                                <p class="small text-muted">Cover approximately {{ ((metrics.yearly_production_kwh/12)/1395*100)|round(0)|int }}% of average household consumption</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Raw Response (Collapsible) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <button class="btn btn-link text-decoration-none p-0" type="button" data-bs-toggle="collapse" data-bs-target="#rawResponse">
+                            <i class="fas fa-code me-2"></i>View Raw Response
+                        </button>
+                    </h6>
+                </div>
+                <div class="collapse" id="rawResponse">
+                    <div class="card-body">
+                        <pre class="bg-light p-3 rounded"><code>{{ ai_response }}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="row">
+        <div class="col-12 text-center">
+            <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg me-3">
+                <i class="fas fa-redo me-2"></i>Analyze Another Rooftop
+            </a>
+            <button class="btn btn-success btn-lg" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>Print Report
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .metric-card {
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .insight-box {
+        border-radius: 10px;
+        background: #f8f9fa;
+    }
+    .manual-area-display {
+        padding: 2rem;
+        background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+        border-radius: 15px;
+        margin: 1rem 0;
+    }
+    
+    @media print {
+        .btn, .card-header button {
+            display: none !important;
+        }
+        .main-container {
+            box-shadow: none !important;
+            background: white !important;
+        }
+    }
+</style>
+{% endblock %}

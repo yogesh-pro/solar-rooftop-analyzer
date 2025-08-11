@@ -6,14 +6,20 @@ __pycache__/
 # Virtual environment
 venv/
 env/
+.venv/
 
 # macOS
 .DS_Store
 
-# Streamlit
-.streamlit/secrets.toml
+# Environment variables
+.env
+**/.env
+Flask/.env
 
 # Model files (will be downloaded from GitHub releases)
 *.pt
 *.pth
+
+# Python version (local)
+.python-version
 

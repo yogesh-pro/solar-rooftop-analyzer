@@ -1,0 +1,851 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="main-container">
+    <div class="row">
+        <div class="col-12 text-center mb-4">
+            <i class="fas fa-sun solar-icon"></i>
+            <h1 class="display-4 fw-bold text-primary mb-3">Solar Rooftop Analyzer</h1>
+            <p class="lead text-muted">Choose your preferred method for rooftop analysis</p>
+            
+            <div class="tech-stack mb-4">
+                <span class="tech-badge">Computer Vision</span>
+                <span class="tech-badge">Solar Analysis</span>
+                <span class="tech-badge">Web Application</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Method Selection -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="method-selector">
+                <h4 class="text-center mb-4">How would you like to analyze your rooftop?</h4>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="method-card" id="imageMethod" role="button" tabindex="0" aria-label="Upload Image method" onclick="selectMethod('image')">
+                            <i class="fas fa-camera method-icon"></i>
+                            <h5>Upload Image</h5>
+                            <p class="text-muted">Let AI detect your rooftop area from an aerial/satellite image</p>
+                            <div class="method-benefits">
+                                <small><i class="fas fa-check text-success"></i> Automatic detection</small><br>
+                                <small><i class="fas fa-check text-success"></i> Visual analysis</small><br>
+                                <small><i class="fas fa-check text-success"></i> Most accurate</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="method-card" id="manualMethod" role="button" tabindex="0" aria-label="Enter Area Manually method" onclick="selectMethod('manual')">
+                            <i class="fas fa-edit method-icon"></i>
+                            <h5>Enter Area Manually</h5>
+                            <p class="text-muted">Input your rooftop area if you already know it</p>
+                            <div class="method-benefits">
+                                <small><i class="fas fa-check text-success"></i> Quick analysis</small><br>
+                                <small><i class="fas fa-check text-success"></i> No image needed</small><br>
+                                <small><i class="fas fa-check text-success"></i> Instant results</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Image Upload Method -->
+    <div class="row" id="imageUploadSection" style="display: none;">
+        <div class="col-lg-8 mx-auto">
+            <form id="uploadForm" method="POST" action="/analyze" enctype="multipart/form-data">
+                <input type="hidden" name="method" value="image">
+                <div class="upload-area" id="uploadArea">
+                    <i class="fas fa-cloud-upload-alt text-primary" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                    <h4 class="text-primary">Upload Rooftop Image</h4>
+                    <p class="text-muted mb-3">Drag and drop your image here, or click to browse</p>
+                    <input type="file" name="file" id="fileInput" accept=".jpg,.jpeg,.png" style="display: none;">
+                    <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-folder-open me-2"></i>Choose File
+                    </button>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Supported formats: JPG, JPEG, PNG (Max: 16MB)
+                        </small>
+                    </div>
+                </div>
+                
+                <div id="filePreview" class="mt-3" style="display: none;">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <img id="previewImage" src="" alt="Preview" style="max-height: 200px; border-radius: 10px;">
+                            <p id="fileName" class="mt-2 mb-0 text-muted"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-analyze" id="analyzeBtn">
+                        <i class="fas fa-chart-line me-2"></i>Analyze Solar Potential
+                    </button>
+                    <button type="button" class="btn btn-secondary ms-2" onclick="goBack()">
+                        <i class="fas fa-arrow-left me-2"></i>Back
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Manual Area Entry Method -->
+    <div class="row" id="manualAreaSection" style="display: none;">
+        <div class="col-lg-6 mx-auto">
+            <form id="manualForm" method="POST" action="/analyze-manual">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-calculator me-2"></i>Enter Rooftop Area</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <label for="rooftopArea" class="form-label fw-bold">Rooftop Area (m²)</label>
+                            <div class="input-group input-group-lg">
+                                <input type="number" class="form-control" id="rooftopArea" name="area" 
+                                       placeholder="e.g., 150" min="10" max="10000" step="0.1" required>
+                                <span class="input-group-text">m²</span>
+                            </div>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Enter the usable rooftop area in square meters (minimum 10 m²)
+                            </div>
+                        </div>
+                        
+                        <div class="area-examples mb-4">
+                            <h6 class="text-muted">Common Rooftop Sizes:</h6>
+                            <div class="row">
+                                <div class="col-6">
+                                    <button type="button" class="btn btn-outline-info btn-sm w-100 mb-2" 
+                                            onclick="setArea(100)">Small House<br><small>~100 m²</small></button>
+                                </div>
+                                <div class="col-6">
+                                    <button type="button" class="btn btn-outline-info btn-sm w-100 mb-2" 
+                                            onclick="setArea(200)">Medium House<br><small>~200 m²</small></button>
+                                </div>
+                                <div class="col-6">
+                                    <button type="button" class="btn btn-outline-info btn-sm w-100 mb-2" 
+                                            onclick="setArea(350)">Large House<br><small>~350 m²</small></button>
+                                </div>
+                                <div class="col-6">
+                                    <button type="button" class="btn btn-outline-info btn-sm w-100 mb-2" 
+                                            onclick="setArea(500)">Commercial<br><small>~500 m²</small></button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-analyze btn-lg">
+                                <i class="fas fa-calculator me-2"></i>Calculate Solar Potential
+                            </button>
+                            <button type="button" class="btn btn-secondary ms-2" onclick="goBack()">
+                                <i class="fas fa-arrow-left me-2"></i>Back
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingDiv" class="loading-overlay" style="display: none; justify-content: center; align-items: flex-start; padding-top: 100px;">
+        <div class="loading-content">
+            <div class="spinner-border spinner-border-lg text-primary d-block mx-auto" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <h4 class="mt-3 text-primary mb-2" id="loadingText">Analyzing your rooftop...</h4>
+            <p class="text-muted mb-3" id="loadingSubtext">This may take 30-60 seconds</p>
+            <div class="progress" style="height: 6px; width: 300px; margin: 0 auto;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Features Section -->
+    <div class="row mt-5" id="featuresSection">
+        <div class="col-12">
+            <h3 class="text-center mb-4">Why Choose Our Analyzer?</h3>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <i class="fas fa-robot text-primary" style="font-size: 2rem;"></i>
+                <h5 class="mt-3">Advanced AI Detection</h5>
+                <p class="text-muted">Custom-trained models for accurate rooftop detection from images</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <i class="fas fa-chart-bar text-success" style="font-size: 2rem;"></i>
+                <h5 class="mt-3">Bill Comparison</h5>
+                <p class="text-muted">Visual charts showing monthly electricity savings with solar</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <i class="fas fa-bolt text-warning" style="font-size: 2rem;"></i>
+                <h5 class="mt-3">Instant Results</h5>
+                <p class="text-muted">Get professional solar assessments in under a minute</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4" id="tipSection">
+        <div class="col-12">
+            <div class="alert alert-info alert-custom">
+                <i class="fas fa-lightbulb me-2"></i>
+                <strong>Pro Tip:</strong> For image analysis, use clear aerial or satellite views. For manual entry, measure only the usable rooftop area (excluding chimneys, vents, etc.).
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<!-- Updated card visuals for clear borders and hover -->
+<style>
+    .method-selector {
+        margin-bottom: 2rem;
+    }
+    
+    /* Stronger visible border and shadow for method cards */
+    .method-card {
+        border: 2px solid #b6c0cc !important; /* higher-contrast border */
+        background: #ffffff;
+        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    
+    .method-card:hover {
+        border-color: #2f6dfc !important;
+        transform: translateY(-6px);
+        box-shadow: 0 14px 32px rgba(47, 109, 252, 0.2) !important;
+    }
+    
+    .method-card.selected {
+        border-color: #2f6dfc !important;
+        background: linear-gradient(135deg, #f5f8ff 0%, #e9f2ff 100%) !important;
+        box-shadow: 0 12px 28px rgba(47, 109, 252, 0.18) !important;
+    }
+    
+    .method-card:focus-visible { outline: 3px solid rgba(47,109,252,0.5); outline-offset: 3px; }
+    
+    .method-icon {
+        font-size: 3rem;
+        color: #007bff;
+        margin-bottom: 1rem;
+    }
+    
+    .method-benefits {
+        margin-top: 1rem;
+        text-align: left;
+    }
+    
+    .area-examples {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 10px;
+    }
+    
+    .upload-area {
+        border: 3px dashed #dee2e6;
+        border-radius: 15px;
+        padding: 3rem 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+    }
+    
+    .upload-area:hover, .upload-area.dragover {
+        border-color: #007bff;
+        background: #f0f8ff;
+    }
+    
+    .btn-analyze {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        border: none;
+        padding: 12px 30px;
+        font-weight: 600;
+        border-radius: 25px;
+        box-shadow: 0 4px 15px rgba(0,123,255,0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-analyze:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,123,255,0.4);
+    }
+    
+    /* Image Upload Card Styles */
+    .upload-card {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+        border-top: 4px solid #007bff;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .upload-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 123, 255, 0.15);
+    }
+    
+    .upload-card-header {
+        text-align: center;
+        padding: 2.5rem 2rem 1.5rem;
+        background: linear-gradient(135deg, #f8fbff 0%, #e8f4fd 100%);
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .upload-header-icon {
+        font-size: 3.5rem;
+        color: #007bff;
+        margin-bottom: 1rem;
+        display: block;
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .upload-card-header h4 {
+        color: #2c3e50;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .upload-zone {
+        margin: 2rem;
+        padding: 3rem 2rem;
+        border: 3px dashed #dee2e6;
+        border-radius: 15px;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: #fafbfc;
+    }
+    
+    .upload-zone:hover {
+        border-color: #007bff;
+        background: #f0f8ff;
+        transform: scale(1.02);
+    }
+    
+    .upload-zone-icon {
+        font-size: 2.5rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .upload-zone:hover .upload-zone-icon {
+        color: #007bff;
+        transform: scale(1.1);
+    }
+    
+    .btn-upload-primary {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    }
+    
+    .btn-upload-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
+        color: white;
+    }
+    
+    .upload-info {
+        text-align: center;
+        padding: 1rem 2rem;
+        background: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .preview-card {
+        background: #ffffff;
+        border: 1px solid #e9ecef;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .preview-card-body {
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    .preview-image {
+        max-height: 200px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .preview-info {
+        margin-top: 1rem;
+        color: #495057;
+        font-size: 1rem;
+    }
+    
+    .upload-actions {
+        text-align: center;
+        padding: 2rem;
+        background: #f8fbff;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    /* Manual Area Entry Card Styles */
+    .manual-card {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+        border-top: 4px solid #28a745;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .manual-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(40, 167, 69, 0.15);
+    }
+    
+    .manual-card-header {
+        text-align: center;
+        padding: 2.5rem 2rem 1.5rem;
+        background: linear-gradient(135deg, #f8fff8 0%, #e8f5e8 100%);
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .manual-header-icon {
+        font-size: 3.5rem;
+        color: #28a745;
+        margin-bottom: 1rem;
+        display: block;
+        animation: bounce 2s ease-in-out infinite;
+    }
+    
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-8px); }
+    }
+    
+    .manual-card-header h4 {
+        color: #2c3e50;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .manual-input-section {
+        padding: 2rem;
+        background: #ffffff;
+    }
+    
+    .area-input-group {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+    
+    .area-input {
+        font-size: 1.5rem;
+        padding: 1rem 4rem 1rem 1.5rem;
+        border-radius: 15px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+        font-weight: 600;
+    }
+    
+    .area-input:focus {
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        transform: scale(1.02);
+    }
+    
+    .input-unit {
+        position: absolute;
+        right: 1.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #6c757d;
+    }
+    
+    .input-help {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    
+    .area-examples-card {
+        background: #f8f9fa;
+        margin: 0 2rem 2rem;
+        padding: 1.5rem;
+        border-radius: 15px;
+        border-left: 4px solid #17a2b8;
+    }
+    
+    .examples-title {
+        color: #495057;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+    }
+    
+    .examples-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .example-btn {
+        background: #ffffff;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .example-btn:hover {
+        border-color: #17a2b8;
+        background: #e8f7f8;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(23, 162, 184, 0.2);
+    }
+    
+    .example-btn i {
+        font-size: 1.5rem;
+        color: #17a2b8;
+    }
+    
+    .example-label {
+        font-weight: 600;
+        color: #495057;
+        font-size: 0.9rem;
+    }
+    
+    .example-size {
+        color: #6c757d;
+        font-size: 0.8rem;
+    }
+    
+    .manual-actions {
+        text-align: center;
+        padding: 2rem;
+        background: #f8fff8;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .btn-analyze-primary {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border: none;
+        color: white;
+        padding: 1rem 2.5rem;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+    }
+    
+    .btn-analyze-primary:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 30px rgba(40, 167, 69, 0.4);
+        color: white;
+    }
+    
+    .btn-back {
+        background: #6c757d;
+        border: none;
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 25px;
+        font-weight: 500;
+        margin-left: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-back:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+        color: white;
+    }
+    
+    /* Loading Overlay Styles */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(5px);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding-top: 100px;
+    }
+    
+    .loading-content {
+        /* Absolute top-center */
+        position: absolute;
+        top: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        right: auto;
+        /* Center all children precisely */
+        display: grid;
+        justify-items: center;
+        align-items: start;
+        row-gap: 12px;
+        text-align: center;
+    }
+    
+    .spinner-border-lg {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.3em;
+    }
+
+    /* Center spinner perfectly inside the loading card */
+    .loading-content .spinner-border {
+        margin: 0 auto;
+        display: block;
+    }
+    .loading-content h4,
+    .loading-content p,
+    .loading-content .progress {
+        margin-left: auto;
+        margin-right: auto;
+        text-align: center;
+    }
+
+    /* Button-like appearance for method cards */
+    .method-card.btn-like {
+        border: none;
+        color: #ffffff;
+        border-radius: 50px;
+        padding: 1.75rem;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        transition: all 0.25s ease;
+    }
+    .method-card.btn-image { 
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); /* blue */
+    }
+    .method-card.btn-manual { 
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); /* green */
+    }
+    .method-card.btn-like:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+        filter: brightness(1.05);
+    }
+    .method-card.btn-like:active {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+        filter: brightness(0.98);
+    }
+    .method-card.btn-like:focus-visible {
+        outline: 3px solid rgba(59, 130, 246, 0.7);
+        outline-offset: 3px;
+    }
+    .method-card.btn-like h5,
+    .method-card.btn-like p,
+    .method-card.btn-like .method-benefits,
+    .method-card.btn-like .method-icon {
+        color: #ffffff !important;
+    }
+    .method-card.btn-like .text-muted { color: rgba(255,255,255,0.92) !important; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let selectedMethod = null;
+    
+    function selectMethod(method) {
+        selectedMethod = method;
+        
+        // Reset all cards
+        document.querySelectorAll('.method-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        // Select the chosen method
+        if (method === 'image') {
+            document.getElementById('imageMethod').classList.add('selected');
+            setTimeout(() => {
+                document.getElementById('imageUploadSection').style.display = 'block';
+                document.querySelector('.method-selector').style.display = 'none';
+                document.getElementById('featuresSection').style.display = 'none';
+                document.getElementById('tipSection').style.display = 'none';
+            }, 300);
+        } else if (method === 'manual') {
+            document.getElementById('manualMethod').classList.add('selected');
+            setTimeout(() => {
+                document.getElementById('manualAreaSection').style.display = 'block';
+                document.querySelector('.method-selector').style.display = 'none';
+                document.getElementById('featuresSection').style.display = 'none';
+                document.getElementById('tipSection').style.display = 'none';
+            }, 300);
+        }
+    }
+    
+    function goBack() {
+        document.getElementById('imageUploadSection').style.display = 'none';
+        document.getElementById('manualAreaSection').style.display = 'none';
+        document.querySelector('.method-selector').style.display = 'block';
+        document.getElementById('featuresSection').style.display = 'block';
+        document.getElementById('tipSection').style.display = 'block';
+        
+        // Reset form states
+        document.getElementById('fileInput').value = '';
+        document.getElementById('filePreview').style.display = 'none';
+        document.getElementById('rooftopArea').value = '';
+        
+        selectedMethod = null;
+        document.querySelectorAll('.method-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+    }
+    
+    function setArea(area) {
+        document.getElementById('rooftopArea').value = area;
+    }
+    
+    // Image upload functionality
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+    const previewImage = document.getElementById('previewImage');
+    const fileName = document.getElementById('fileName');
+    const uploadForm = document.getElementById('uploadForm');
+    const manualForm = document.getElementById('manualForm');
+    const loadingDiv = document.getElementById('loadingDiv');
+    
+    // Drag and drop functionality
+    if (uploadArea) {
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleFileSelect();
+            }
+        });
+
+        uploadArea.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'BUTTON') {
+                fileInput.click();
+            }
+        });
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', handleFileSelect);
+    }
+
+    function handleFileSelect() {
+        const file = fileInput.files[0];
+        if (file) {
+            if (!file.type.match('image.*')) {
+                alert('Please select an image file.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                fileName.textContent = file.name;
+                filePreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Form submission handlers
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', (e) => {
+            e.preventDefault(); // Always prevent default submission
+            
+            if (!fileInput.files[0]) {
+                alert('Please select an image file first.');
+                return;
+            }
+            
+            // Show loading indicator
+            showLoading('Analyzing your rooftop image...', 'AI is detecting rooftop area and generating solar metrics');
+            
+            // Submit form after a brief delay to ensure loading indicator shows
+            setTimeout(() => {
+                uploadForm.submit();
+            }, 100);
+        });
+    }
+    
+    if (manualForm) {
+        manualForm.addEventListener('submit', (e) => {
+            e.preventDefault(); // Always prevent default submission
+            
+            const area = document.getElementById('rooftopArea').value;
+            if (!area || area < 10) {
+                alert('Please enter a valid rooftop area (minimum 10 m²).');
+                return;
+            }
+            
+            // Show loading indicator
+            showLoading('Calculating solar potential...', 'Generating personalized solar recommendations');
+            
+            // Submit form after a brief delay to ensure loading indicator shows
+            setTimeout(() => {
+                manualForm.submit();
+            }, 100);
+        });
+    }
+    
+    function showLoading(title, subtitle) {
+        document.getElementById('loadingText').textContent = title;
+        document.getElementById('loadingSubtext').textContent = subtitle;
+        document.getElementById('loadingDiv').style.display = 'flex';
+    }
+
+    // Keyboard accessibility: trigger selection on Enter/Space
+    document.querySelectorAll('.method-card[role="button"]').forEach(card => {
+        card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                card.click();
+            }
+        });
+    });
+</script>
+{% endblock %}

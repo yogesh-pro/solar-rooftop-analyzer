@@ -1,71 +1,68 @@
-# ☀️ Solar Rooftop Analysis App
+# Solar Rooftop Analyzer
 
-An intelligent system that analyzes rooftop images to estimate usable solar panel area and uses AI (via OpenRouter) to calculate installation metrics, energy production, and ROI estimates for homeowners and solar professionals.
+Professional Flask web application for rooftop solar potential analysis with AI.
 
-🚀 **Live Demo**: [Click Me!](https://solar-rooftop-analyzer-vphpoef7w8xi6dx27jqq3z.streamlit.app/)
+## Features
+- Rooftop detection (Computer Vision)
+- AI recommendations via OpenRouter
+- Cost-benefit metrics with ROI
+- Modern, responsive UI (Bootstrap)
+- Secure uploads and error handling
 
----
+## Quick Start (uv)
 
-## 📌 Features
-
-- 🔼 Upload a rooftop image via the web interface
-- 🧠 ML-based rooftop segmentation using a deep learning model
-- 📏 Automated rooftop area estimation in square meters
-- 🧮 AI-powered solar metric generation:
-  - 📦 Recommended number of solar panels
-  - ⚡ System capacity (kW)
-  - 🌞 Annual energy production (kWh)
-  - 💰 Installation cost
-  - 🪙 Yearly savings
-  - ⏳ Payback period
-  - 📘 Detailed explanation for each metric (via LLM)
-
----
-
-## 🛠️ Project Setup Instructions
-
-### 1. **Clone the Repository**
+1) Setup
 ```bash
-git clone https://github.com/yourusername/solar-rooftop-analyzer.git
-cd solar-rooftop-analyzer
+./setup.sh
 ```
 
-### 2. **Create and Activate a Virtual Environment**
-```bash
-# For Unix/macOS
-python3 -m venv venv
-source venv/bin/activate
-
-# For Windows
-python -m venv venv
-venv\Scripts\activate
+2) Configure API key
+Create or edit `Flask/.env`:
+```
+OPENROUTER_API_KEY=your_openrouter_api_key_here
 ```
 
-### 3. **Install Required Packages**
+3) Run
 ```bash
-pip install -r requirements.txt
+./run-flask.sh
+```
+App: http://localhost:8080
+
+## Alternative: Manual
+```bash
+uv venv
+source .venv/bin/activate
+uv pip install -r Flask/requirements.txt
+cd Flask
+python server.py
 ```
 
-### 4. **Download Model from [HERE](https://github.com/yogesh-pro/solar-rooftop-analyzer/releases/tag/Model)**
-
-
-### 5. **🚀 Run the Streamlit App**
-```bash
-streamlit run app.py
+## Project Structure
 ```
-- Then open your browser at http://localhost:8501
-
-### **📂 Project Structure**
-```bash
-├── app.py                      # Streamlit web app
-├── model.ipynb                 # Model training or inference notebook
-├── requirements.txt            # Python dependencies
-├── rooftop_best_model.pt       # Your trained segmentation model
-├── README.md                   # This file
+Flask/
+├── main.py            # Core Flask app (routes, analysis)
+├── server.py          # App runner (host/port)
+├── model_loader.py    # Model loading utils
+├── templates/         # HTML templates (base, index, results)
+├── static/            # Static assets (uploads, results)
+└── .env               # Environment (OPENROUTER_API_KEY)
+pyproject.toml         # uv project config
+uv.lock                # lockfile
+run-flask.sh           # helper to run app
+setup.sh               # helper to set up env
 ```
 
-### **🌟 Future Scope**
-- Roof tilt & direction consideration
-- Shadow detection
-- Real-time ROI tracking with dynamic electricity pricing
+## API
+- Web: `GET /` upload/entry, `POST /analyze`, `POST /analyze-manual`
+- REST: `POST /api/analyze` (multipart/form-data or JSON)
+```bash
+curl -X POST -F "file=@your_image.jpg" http://localhost:8080/api/analyze
+```
 
+## Requirements
+- Python 3.10+
+- OpenRouter API key (https://openrouter.ai/)
+
+## Notes
+- Environment is loaded from `Flask/.env`.
+- Model file may be downloaded automatically if missing.
